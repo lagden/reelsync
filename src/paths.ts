@@ -8,14 +8,14 @@
  * grava) contra um outputDir relativo dá falso positivo de "mudou de pasta".
  */
 export function resolveNewPath(
-  currentPath: string,
-  outputDir: string,
-  categoria: string,
-  subcategoria: string,
+	currentPath: string,
+	outputDir: string,
+	categoria: string,
+	subcategoria: string,
 ): string | null {
-  const barra = currentPath.lastIndexOf("/");
-  const dirAtual = currentPath.slice(0, barra);
-  const nomeArquivo = currentPath.slice(barra + 1);
-  const dirNovo = `${outputDir}/${categoria}/${subcategoria}`;
-  return dirAtual === dirNovo ? null : `${dirNovo}/${nomeArquivo}`;
+	const barra = currentPath.lastIndexOf("/");
+	const dirAtual = currentPath.slice(0, barra);
+	const nomeArquivo = currentPath.slice(barra + 1);
+	const dirNovo = `${outputDir}/${categoria}/${subcategoria}`;
+	return dirAtual === dirNovo ? null : `${dirNovo}/${nomeArquivo}`;
 }

@@ -2,15 +2,15 @@ import * as v from "valibot";
 import { InstaloaderNodeSchema } from "./schemas.ts";
 
 export interface ScrapedPost {
-  shortcode: string;
-  url: string;
-  caption: string;
-  date: number; // unix seconds, taken_at_timestamp
+	shortcode: string;
+	url: string;
+	caption: string;
+	date: number; // unix seconds, taken_at_timestamp
 }
 
 export interface ScrapeOptions {
-  browser: string;
-  limit?: number;
+	browser: string;
+	limit?: number;
 }
 
 /**
@@ -26,48 +26,48 @@ export interface ScrapeOptions {
  * no final.
  */
 export async function scrapeSaved(opts: ScrapeOptions): Promise<ScrapedPost[]> {
-  const rawDir = await Deno.makeTempDir({ prefix: "chupinhador-instaloader-" });
-  try {
-    const args = [
-      "--load-cookies",
-      opts.browser,
-      "--no-videos",
-      "--no-pictures",
-      "--no-video-thumbnails",
-      "--no-compress-json",
-    ];
-    if (opts.limit) args.push("--count", String(opts.limit));
-    args.push("--", ":saved");
+	const rawDir = await Deno.makeTempDir({ prefix: "chupinhador-instaloader-" });
+	try {
+		const args = [
+			"--load-cookies",
+			opts.browser,
+			"--no-videos",
+			"--no-pictures",
+			"--no-video-thumbnails",
+			"--no-compress-json",
+		];
+		if (opts.limit) args.push("--count", String(opts.limit));
+		args.push("--", ":saved");
 
-    const command = new Deno.Command("instaloader", {
-      args,
-      cwd: rawDir,
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    const { success, code } = await command.output();
-    if (!success) {
-      throw new Error(`instaloader saiu com código ${code}`);
-    }
+		const command = new Deno.Command("instaloader", {
+			args,
+			cwd: rawDir,
+			stdout: "inherit",
+			stderr: "inherit",
+		});
+		const { success, code } = await command.output();
+		if (!success) {
+			throw new Error(`instaloader saiu com código ${code}`);
+		}
 
-    return await readScrapedPosts(rawDir);
-  } finally {
-    await Deno.remove(rawDir, { recursive: true });
-  }
+		return await readScrapedPosts(rawDir);
+	} finally {
+		await Deno.remove(rawDir, { recursive: true });
+	}
 }
 
 /** Varre `dir` recursivamente: o instaloader aninha os JSONs numa subpasta. */
 async function readScrapedPosts(dir: string): Promise<ScrapedPost[]> {
-  const posts: ScrapedPost[] = [];
-  for await (const entry of Deno.readDir(dir)) {
-    const path = `${dir}/${entry.name}`;
-    if (entry.isDirectory) {
-      posts.push(...await readScrapedPosts(path));
-    } else if (entry.name.endsWith(".json")) {
-      posts.push(...parsePostJson(await Deno.readTextFile(path)));
-    }
-  }
-  return posts;
+	const posts: ScrapedPost[] = [];
+	for await (const entry of Deno.readDir(dir)) {
+		const path = `${dir}/${entry.name}`;
+		if (entry.isDirectory) {
+			posts.push(...await readScrapedPosts(path));
+		} else if (entry.name.endsWith(".json")) {
+			posts.push(...parsePostJson(await Deno.readTextFile(path)));
+		}
+	}
+	return posts;
 }
 
 /**
@@ -78,13 +78,13 @@ async function readScrapedPosts(dir: string): Promise<ScrapedPost[]> {
  * silenciosamente virar `""`/`0`.
  */
 export function parsePostJson(raw: string): ScrapedPost[] {
-  const parsed = JSON.parse(raw);
-  if (!parsed?.node) return [];
-  const node = v.parse(InstaloaderNodeSchema, parsed.node);
-  return [{
-    shortcode: node.shortcode,
-    url: `https://www.instagram.com/p/${node.shortcode}/`,
-    caption: node.edge_media_to_caption?.edges[0]?.node.text ?? "",
-    date: node.taken_at_timestamp,
-  }];
+	const parsed = JSON.parse(raw);
+	if (!parsed?.node) return [];
+	const node = v.parse(InstaloaderNodeSchema, parsed.node);
+	return [{
+		shortcode: node.shortcode,
+		url: `https://www.instagram.com/p/${node.shortcode}/`,
+		caption: node.edge_media_to_caption?.edges[0]?.node.text ?? "",
+		date: node.taken_at_timestamp,
+	}];
 }

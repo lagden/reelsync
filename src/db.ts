@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS posts (
 
 /** Abre (criando se preciso) o catálogo sqlite de `{outputDir}/chupinhador.sqlite`. */
 export function openDb(outputDir: string): DatabaseSync {
-  Deno.mkdirSync(outputDir, { recursive: true });
-  const db = new DatabaseSync(`${outputDir}/chupinhador.sqlite`);
-  db.exec(SCHEMA);
-  return db;
+	Deno.mkdirSync(outputDir, { recursive: true });
+	const db = new DatabaseSync(`${outputDir}/chupinhador.sqlite`);
+	db.exec(SCHEMA);
+	return db;
 }
 
 /**
@@ -28,12 +28,12 @@ export function openDb(outputDir: string): DatabaseSync {
  * file_path/downloaded_at — isso só é preenchido por markDownloaded.
  */
 export function upsertScraped(
-  db: DatabaseSync,
-  post: ScrapedPost,
-  categoria: Category,
+	db: DatabaseSync,
+	post: ScrapedPost,
+	categoria: Category,
 ): void {
-  db.prepare(
-    `INSERT INTO posts (shortcode, url, caption, categoria, subcategoria, taken_at, scraped_at)
+	db.prepare(
+		`INSERT INTO posts (shortcode, url, caption, categoria, subcategoria, taken_at, scraped_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(shortcode) DO UPDATE SET
        url = excluded.url,
@@ -42,22 +42,22 @@ export function upsertScraped(
        subcategoria = excluded.subcategoria,
        taken_at = excluded.taken_at,
        scraped_at = excluded.scraped_at`,
-  ).run(
-    post.shortcode,
-    post.url,
-    post.caption,
-    categoria.categoria,
-    categoria.subcategoria,
-    post.date,
-    new Date().toISOString(),
-  );
+	).run(
+		post.shortcode,
+		post.url,
+		post.caption,
+		categoria.categoria,
+		categoria.subcategoria,
+		post.date,
+		new Date().toISOString(),
+	);
 }
 
 /** Marca um post como baixado, com o caminho final resolvido do vídeo. */
 export function markDownloaded(db: DatabaseSync, shortcode: string, filePath: string): void {
-  db.prepare(`UPDATE posts SET file_path = ?, downloaded_at = ? WHERE shortcode = ?`).run(
-    filePath,
-    new Date().toISOString(),
-    shortcode,
-  );
+	db.prepare(`UPDATE posts SET file_path = ?, downloaded_at = ? WHERE shortcode = ?`).run(
+		filePath,
+		new Date().toISOString(),
+		shortcode,
+	);
 }

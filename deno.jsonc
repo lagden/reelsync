@@ -1,4 +1,31 @@
 {
+  "fmt": {
+    "useTabs": true,
+    "indentWidth": 4,
+    "lineWidth": 120,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "always",
+    "include": [
+      "src/",
+      "scripts/",
+      "*.md"
+    ]
+  },
+  "lint": {
+    "include": [
+      "src/",
+      "scripts/"
+    ],
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "include": [
+        "no-inferrable-types"
+      ]
+    }
+  },
   "tasks": {
     "dev": "deno run --allow-run --allow-read --allow-write --allow-env src/cli.ts",
     "test": "deno test --allow-read --allow-write src/",

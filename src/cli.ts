@@ -17,14 +17,14 @@ const categories = parseCategories(categoriesData);
 const rawArgs = Deno.args[0] === "--" ? Deno.args.slice(1) : Deno.args;
 
 const rawFlags = parseArgs(rawArgs, {
-  string: ["browser", "output-dir", "limit"],
-  boolean: ["help"],
-  alias: { help: "h" },
-  default: { browser: "firefox", "output-dir": "./instagram-saved" },
+	string: ["browser", "output-dir", "limit"],
+	boolean: ["help"],
+	alias: { help: "h" },
+	default: { browser: "firefox", "output-dir": "./instagram-saved" },
 });
 
 if (rawFlags.help) {
-  console.log(`chupinhador-e-organizador
+	console.log(`chupinhador-e-organizador
 
 Puxa os posts salvos do Instagram, classifica por categoria/subcategoria
 e baixa o vídeo com yt-dlp (sem repetir o que já foi baixado).
@@ -38,17 +38,17 @@ Flags:
   --output-dir <path>   Onde salvar os vídeos, o banco e o historico_downloads.txt. (default: ./instagram-saved)
   --limit <n>           Número máximo de posts salvos a considerar nesta execução.
   -h, --help            Mostra esta ajuda.`);
-  Deno.exit(0);
+	Deno.exit(0);
 }
 
 const flagsResult = v.safeParse(FlagsSchema, {
-  browser: rawFlags.browser,
-  outputDir: rawFlags["output-dir"],
-  limit: rawFlags.limit ? Number(rawFlags.limit) : undefined,
+	browser: rawFlags.browser,
+	outputDir: rawFlags["output-dir"],
+	limit: rawFlags.limit ? Number(rawFlags.limit) : undefined,
 });
 if (!flagsResult.success) {
-  console.error(`Flags inválidas:\n${v.summarize(flagsResult.issues)}`);
-  Deno.exit(1);
+	console.error(`Flags inválidas:\n${v.summarize(flagsResult.issues)}`);
+	Deno.exit(1);
 }
 const { browser, outputDir, limit } = flagsResult.output;
 
@@ -62,18 +62,30 @@ const posts = await scrapeSaved({ browser, limit });
 spinner.stop(`${posts.length} posts encontrados.`);
 
 let processados = 0;
+let falhas = 0;
 for (const post of posts) {
-  const categoria = classify(post.caption, categories);
-  upsertScraped(db, post, categoria);
-  p.log.step(`${post.shortcode} -> ${categoria.categoria}/${categoria.subcategoria}`);
-  const filePath = await downloadPost(post.url, categoria.categoria, categoria.subcategoria, {
-    browser,
-    outputDir,
-  });
-  if (filePath) markDownloaded(db, post.shortcode, filePath);
-  processados++;
+	const categoria = classify(post.caption, categories);
+	upsertScraped(db, post, categoria);
+	p.log.step(`${post.shortcode} -> ${categoria.categoria}/${categoria.subcategoria}`);
+	try {
+		const filePath = await downloadPost(post.url, categoria.categoria, categoria.subcategoria, {
+			browser,
+			outputDir,
+		});
+		if (filePath) markDownloaded(db, post.shortcode, filePath);
+	} catch (err) {
+		// Um post falhar (vídeo indisponível, carrossel só com fotos, etc.) não
+		// pode derrubar o resto do lote — a metadata já foi gravada acima, só
+		// o download desse post específico que não rolou.
+		p.log.warn(`${post.shortcode}: ${err instanceof Error ? err.message : err}`);
+		falhas++;
+	}
+	processados++;
 }
 
 db.close();
 
-p.outro(`Concluído. ${processados} posts processados (yt-dlp pula os que já estão no archive).`);
+p.outro(
+	`Concluído. ${processados} posts processados, ${falhas} falha(s) ` +
+		`(yt-dlp pula os que já estão no archive).`,
+);
