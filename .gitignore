@@ -1,0 +1,9 @@
+# Binário compilado (regenera com `deno task compile`)
+/chupinhador
+
+# Dados pessoais do usuário — posts salvos, legendas, vídeos baixados, banco.
+# Nunca commitar: é conteúdo privado do Instagram de quem roda a CLI.
+/instagram-saved/
+
+# macOS
+.DS_Store
