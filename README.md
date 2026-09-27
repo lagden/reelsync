@@ -110,3 +110,8 @@ deno task compile
 Gera `./chupinhador`, sem depender de Deno instalado pra rodar. `categories.json` é embutido no binário no momento da
 compilação — editou o arquivo? recompile pra valer no binário (`deno task dev` sempre lê a versão atual do disco, sem
 esse problema).
+
+
+## Buy Me a Coffee
+
+bitcoin:BC1P6SYW5V8GA6YEMF66C5Z6XQ0ZM5GKRPXE60GH9V6UW5SESFQLG92SNU6NEU?label=Github&message=Buy%20me%20a%20coffee
