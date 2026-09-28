@@ -122,4 +122,5 @@ disk, no such issue there).
 
 ## Buy Me a Coffee
 
-[bitcoin:bc1p6syw5v8ga6yemf66c5z6xq0zm5gkrpxe60gh9v6uw5sesfqlg92snu6neu](bitcoin:bc1p6syw5v8ga6yemf66c5z6xq0zm5gkrpxe60gh9v6uw5sesfqlg92snu6neu?label=Github&message=Buy%20me%20a%20coffee)
+[![Donate Bitcoin](https://img.shields.io/badge/Donate-Bitcoin-orange?logo=bitcoin)](https://mempool.space/address/BC1P6SYW5V8GA6YEMF66C5Z6XQ0ZM5GKRPXE60GH9V6UW5SESFQLG92SNU6NEU)
+
