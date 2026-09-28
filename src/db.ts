@@ -61,3 +61,32 @@ export function markDownloaded(db: DatabaseSync, shortcode: string, filePath: st
 		shortcode,
 	);
 }
+
+export interface PostCounts {
+	total: number;
+	downloaded: number;
+	pending: number;
+}
+
+/** Contagens pro prompt inicial da CLI: quantos posts já estão no catálogo e quantos faltam baixar. */
+export function getCounts(db: DatabaseSync): PostCounts {
+	const row = db.prepare(`SELECT COUNT(*) AS total, COUNT(file_path) AS downloaded FROM posts`).get() as {
+		total: number;
+		downloaded: number;
+	};
+	return { total: row.total, downloaded: row.downloaded, pending: row.total - row.downloaded };
+}
+
+export interface PendingPost {
+	shortcode: string;
+	url: string;
+	categoria: string;
+	subcategoria: string;
+}
+
+/** Posts já classificados no banco mas ainda sem `file_path` (download nunca completou). */
+export function getPendingPosts(db: DatabaseSync, limit?: number): PendingPost[] {
+	const base = `SELECT shortcode, url, categoria, subcategoria FROM posts WHERE file_path IS NULL`;
+	const rows = limit ? db.prepare(`${base} LIMIT ?`).all(limit) : db.prepare(base).all();
+	return rows as unknown as PendingPost[];
+}

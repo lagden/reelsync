@@ -4,7 +4,7 @@ import * as p from "@clack/prompts";
 import { scrapeSaved } from "./scrape.ts";
 import { classify, parseCategories } from "./classify.ts";
 import { downloadPost } from "./download.ts";
-import { markDownloaded, openDb, upsertScraped } from "./db.ts";
+import { getCounts, getPendingPosts, markDownloaded, openDb, upsertScraped } from "./db.ts";
 import { FlagsSchema } from "./schemas.ts";
 // Import estático (não Deno.readTextFile): assim o `deno compile` embute o
 // arquivo no binário sozinho, sem precisar de --include nem de ler do disco.
@@ -56,31 +56,76 @@ p.intro("chupinhador-e-organizador");
 
 const db = openDb(outputDir);
 
-const spinner = p.spinner();
-spinner.start("Buscando posts salvos (instaloader)...");
-const posts = await scrapeSaved({ browser, limit });
-spinner.stop(`${posts.length} posts encontrados.`);
+// Um post falhar (vídeo indisponível, carrossel só com fotos, etc.) não pode
+// derrubar o resto do lote — a metadata já está commitada no banco antes de
+// qualquer download ser tentado, então só esse post específico fica pendente.
+async function tentarBaixar(shortcode: string, url: string, categoria: string, subcategoria: string): Promise<boolean> {
+	try {
+		const filePath = await downloadPost(url, categoria, subcategoria, { browser, outputDir });
+		if (filePath) markDownloaded(db, shortcode, filePath);
+		return true;
+	} catch (err) {
+		p.log.warn(`${shortcode}: ${err instanceof Error ? err.message : err}`);
+		return false;
+	}
+}
+
+const counts = getCounts(db);
+const acao = await p.select({
+	message: `Você tem ${counts.total} posts sincronizados, ${counts.downloaded} baixados e ` +
+		`${counts.pending} pendentes. Gostaria de:`,
+	options: [
+		{ value: "sync", label: "Verificar se tem novos posts sem baixar os vídeos" },
+		{ value: "sync-download", label: "Verificar se tem novos posts e baixar os vídeos" },
+		{ value: "pending", label: "Baixar os pendentes" },
+		{ value: "pending-limit", label: "Baixar os pendentes com limite" },
+	] as const,
+});
+if (p.isCancel(acao)) {
+	p.cancel("Operação cancelada.");
+	Deno.exit(0);
+}
 
 let processados = 0;
 let falhas = 0;
-for (const post of posts) {
-	const categoria = classify(post.caption, categories);
-	upsertScraped(db, post, categoria);
-	p.log.step(`${post.shortcode} -> ${categoria.categoria}/${categoria.subcategoria}`);
-	try {
-		const filePath = await downloadPost(post.url, categoria.categoria, categoria.subcategoria, {
-			browser,
-			outputDir,
-		});
-		if (filePath) markDownloaded(db, post.shortcode, filePath);
-	} catch (err) {
-		// Um post falhar (vídeo indisponível, carrossel só com fotos, etc.) não
-		// pode derrubar o resto do lote — a metadata já foi gravada acima, só
-		// o download desse post específico que não rolou.
-		p.log.warn(`${post.shortcode}: ${err instanceof Error ? err.message : err}`);
-		falhas++;
+
+if (acao === "sync" || acao === "sync-download") {
+	const spinner = p.spinner();
+	spinner.start("Buscando posts salvos (instaloader)...");
+	const posts = await scrapeSaved({ browser, limit });
+	spinner.stop(`${posts.length} posts encontrados.`);
+
+	for (const post of posts) {
+		const categoria = classify(post.caption, categories);
+		upsertScraped(db, post, categoria);
+		p.log.step(`${post.shortcode} -> ${categoria.categoria}/${categoria.subcategoria}`);
+		if (acao === "sync-download") {
+			if (!await tentarBaixar(post.shortcode, post.url, categoria.categoria, categoria.subcategoria)) falhas++;
+		}
+		processados++;
 	}
-	processados++;
+} else {
+	let limitePendentes = limit;
+	if (acao === "pending-limit" && limitePendentes === undefined) {
+		const valor = await p.text({
+			message: "Quantos pendentes baixar?",
+			validate: (v) => {
+				if (!Number.isInteger(Number(v)) || Number(v) <= 0) return "Informe um número inteiro maior que 0.";
+			},
+		});
+		if (p.isCancel(valor)) {
+			p.cancel("Operação cancelada.");
+			Deno.exit(0);
+		}
+		limitePendentes = Number(valor);
+	}
+
+	const pendentes = getPendingPosts(db, limitePendentes);
+	p.log.step(`${pendentes.length} post(s) pendente(s) encontrado(s).`);
+	for (const post of pendentes) {
+		if (!await tentarBaixar(post.shortcode, post.url, post.categoria, post.subcategoria)) falhas++;
+		processados++;
+	}
 }
 
 db.close();

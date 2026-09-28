@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@^1";
-import { markDownloaded, openDb, upsertScraped } from "./db.ts";
+import { getCounts, getPendingPosts, markDownloaded, openDb, upsertScraped } from "./db.ts";
 import type { ScrapedPost } from "./scrape.ts";
 
 const post: ScrapedPost = {
@@ -56,6 +56,37 @@ Deno.test("markDownloaded preenche file_path sem apagar o resto", () => {
 	>;
 	assertEquals(row.file_path, `${dir}/culinaria/bolos/ABC123_bolo.mp4`);
 	assertEquals(row.categoria, "culinaria");
+
+	db.close();
+	Deno.removeSync(dir, { recursive: true });
+});
+
+Deno.test("getCounts reflete total/baixados/pendentes", () => {
+	const dir = tempOutputDir();
+	const db = openDb(dir);
+	upsertScraped(db, post, { categoria: "culinaria", subcategoria: "bolos" });
+	upsertScraped(db, { ...post, shortcode: "DEF456" }, { categoria: "culinaria", subcategoria: "bolos" });
+	markDownloaded(db, "ABC123", `${dir}/culinaria/bolos/ABC123_bolo.mp4`);
+
+	assertEquals(getCounts(db), { total: 2, downloaded: 1, pending: 1 });
+
+	db.close();
+	Deno.removeSync(dir, { recursive: true });
+});
+
+Deno.test("getPendingPosts só traz posts sem file_path e respeita limit", () => {
+	const dir = tempOutputDir();
+	const db = openDb(dir);
+	upsertScraped(db, post, { categoria: "culinaria", subcategoria: "bolos" });
+	upsertScraped(db, { ...post, shortcode: "DEF456" }, { categoria: "culinaria", subcategoria: "bolos" });
+	upsertScraped(db, { ...post, shortcode: "GHI789" }, { categoria: "culinaria", subcategoria: "bolos" });
+	markDownloaded(db, "ABC123", `${dir}/culinaria/bolos/ABC123_bolo.mp4`);
+
+	const pending = getPendingPosts(db);
+	assertEquals(pending.map((p) => p.shortcode).sort(), ["DEF456", "GHI789"]);
+
+	const limited = getPendingPosts(db, 1);
+	assertEquals(limited.length, 1);
 
 	db.close();
 	Deno.removeSync(dir, { recursive: true });
