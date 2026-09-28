@@ -10,7 +10,7 @@ const post: ScrapedPost = {
 };
 
 function tempOutputDir(): string {
-	return Deno.makeTempDirSync({ prefix: "chupinhador-db-test-" });
+	return Deno.makeTempDirSync({ prefix: "reelsync-db-test-" });
 }
 
 Deno.test("upsertScraped grava e classify pode ser lido de volta", () => {

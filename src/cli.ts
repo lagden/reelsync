@@ -24,14 +24,14 @@ const rawFlags = parseArgs(rawArgs, {
 });
 
 if (rawFlags.help) {
-	console.log(`chupinhador-e-organizador
+	console.log(`reelsync
 
 Puxa os posts salvos do Instagram, classifica por categoria/subcategoria
 e baixa o vídeo com yt-dlp (sem repetir o que já foi baixado).
 
 Uso:
   deno task dev [flags]
-  ./chupinhador [flags]   (binário compilado com 'deno task compile')
+  ./reelsync [flags]   (binário compilado com 'deno task compile')
 
 Flags:
   --browser <nome>      Browser de onde ler os cookies de sessão. (default: firefox)
@@ -52,7 +52,7 @@ if (!flagsResult.success) {
 }
 const { browser, outputDir, limit } = flagsResult.output;
 
-p.intro("chupinhador-e-organizador");
+p.intro("reelsync");
 
 const db = openDb(outputDir);
 

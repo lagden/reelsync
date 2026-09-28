@@ -26,7 +26,7 @@ export interface ScrapeOptions {
  * no final.
  */
 export async function scrapeSaved(opts: ScrapeOptions): Promise<ScrapedPost[]> {
-	const rawDir = await Deno.makeTempDir({ prefix: "chupinhador-instaloader-" });
+	const rawDir = await Deno.makeTempDir({ prefix: "reelsync-instaloader-" });
 	try {
 		const args = [
 			"--load-cookies",

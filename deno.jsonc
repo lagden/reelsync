@@ -1,41 +1,41 @@
 {
-  "fmt": {
-    "useTabs": true,
-    "indentWidth": 4,
-    "lineWidth": 120,
-    "semiColons": true,
-    "singleQuote": false,
-    "proseWrap": "always",
-    "include": [
-      "src/",
-      "scripts/",
-      "*.md"
-    ]
-  },
-  "lint": {
-    "include": [
-      "src/",
-      "scripts/"
-    ],
-    "rules": {
-      "tags": [
-        "recommended"
-      ],
-      "include": [
-        "no-inferrable-types"
-      ]
-    }
-  },
-  "tasks": {
-    "dev": "deno run --allow-run --allow-read --allow-write --allow-env src/cli.ts",
-    "test": "deno test --allow-read --allow-write src/",
-    "compile": "deno compile --allow-run --allow-read --allow-write --allow-env -o chupinhador src/cli.ts",
-    "migrate": "deno run --allow-read --allow-write scripts/migrate-raw.ts",
-    "reclassify": "deno run --allow-read --allow-write scripts/reclassify.ts"
-  },
-  "imports": {
-    "@std/cli/parse-args": "jsr:@std/cli@1.0.32/parse-args",
-    "@clack/prompts": "npm:@clack/prompts@1.8.1",
-    "valibot": "npm:valibot@1.5.0"
-  }
+	"fmt": {
+		"useTabs": true,
+		"indentWidth": 4,
+		"lineWidth": 120,
+		"semiColons": true,
+		"singleQuote": false,
+		"proseWrap": "always",
+		"include": [
+			"src/",
+			"scripts/",
+			"*.md"
+		]
+	},
+	"lint": {
+		"include": [
+			"src/",
+			"scripts/"
+		],
+		"rules": {
+			"tags": [
+				"recommended"
+			],
+			"include": [
+				"no-inferrable-types"
+			]
+		}
+	},
+	"tasks": {
+		"dev": "deno run --allow-run --allow-read --allow-write --allow-env src/cli.ts",
+		"test": "deno test --allow-read --allow-write src/",
+		"compile": "deno compile --allow-run --allow-read --allow-write --allow-env -o reelsync src/cli.ts",
+		"migrate": "deno run --allow-read --allow-write scripts/migrate-raw.ts",
+		"reclassify": "deno run --allow-read --allow-write scripts/reclassify.ts"
+	},
+	"imports": {
+		"@std/cli/parse-args": "jsr:@std/cli@1.0.32/parse-args",
+		"@clack/prompts": "npm:@clack/prompts@1.8.1",
+		"valibot": "npm:valibot@1.5.0"
+	}
 }

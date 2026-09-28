@@ -26,7 +26,7 @@ export async function downloadPost(
 	subcategoria: string,
 	opts: DownloadOptions,
 ): Promise<string | undefined> {
-	const pathFile = await Deno.makeTempFile({ prefix: "chupinhador-ytdlp-path-" });
+	const pathFile = await Deno.makeTempFile({ prefix: "reelsync-ytdlp-path-" });
 	try {
 		const args = [
 			"--cookies-from-browser",
